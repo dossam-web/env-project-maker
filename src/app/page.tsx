@@ -116,7 +116,7 @@ export default function Home() {
     const html2pdf = (await import("html2pdf.js")).default;
     
     const element = pdfRef.current;
-    const opt = {
+    const opt: any = {
       margin: 15,
       filename: `${schoolName}_${programName}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },

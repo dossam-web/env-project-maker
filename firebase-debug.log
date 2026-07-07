@@ -1,0 +1,70 @@
+[debug] [2026-07-07T04:08:07.133Z] ----------------------------------------------------------------------
+[debug] [2026-07-07T04:08:07.141Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\user\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2026-07-07T04:08:07.142Z] CLI Version:   15.20.0
+[debug] [2026-07-07T04:08:07.142Z] Platform:      win32
+[debug] [2026-07-07T04:08:07.142Z] Node Version:  v24.15.0
+[debug] [2026-07-07T04:08:07.142Z] Time:          Tue Jul 07 2026 13:08:07 GMT+0900 (한국 표준시)
+[debug] [2026-07-07T04:08:07.143Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-07-07T04:08:18.446Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-07-07T04:08:18.449Z] > authorizing via signed-in user (akanffl@goedu.kr)
+[debug] [2026-07-07T04:08:18.450Z] [iam] checking project ecoinquiry-app for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-07-07T04:08:18.454Z] Checked if tokens are valid: true, expires at: 1783400831611
+[debug] [2026-07-07T04:08:18.456Z] Checked if tokens are valid: true, expires at: 1783400831611
+[debug] [2026-07-07T04:08:18.460Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/ecoinquiry-app:testIamPermissions [none]
+[debug] [2026-07-07T04:08:18.461Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/ecoinquiry-app:testIamPermissions  x-goog-user-project=ecoinquiry-app
+[debug] [2026-07-07T04:08:18.461Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/ecoinquiry-app:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-07-07T04:08:19.343Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/ecoinquiry-app:testIamPermissions 200
+[debug] [2026-07-07T04:08:19.344Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/ecoinquiry-app:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-07-07T04:08:19.346Z] Checked if tokens are valid: true, expires at: 1783400831611
+[debug] [2026-07-07T04:08:19.346Z] Checked if tokens are valid: true, expires at: 1783400831611
+[debug] [2026-07-07T04:08:19.347Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/ecoinquiry-app [none]
+[debug] [2026-07-07T04:08:20.808Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/ecoinquiry-app 200
+[debug] [2026-07-07T04:08:20.808Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/ecoinquiry-app {"projectId":"ecoinquiry-app","projectNumber":"86340919082","displayName":"EcoInquiry","name":"projects/ecoinquiry-app","resources":{"hostingSite":"ecoinquiry-app"},"state":"ACTIVE","labels":{"firebase":"enabled"},"etag":"1_453078ad-e0c9-4544-a212-3303fbee7ef3"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 16.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2026-07-07T04:08:44.239Z] Checked if tokens are valid: true, expires at: 1783400831611
+[debug] [2026-07-07T04:08:44.239Z] Checked if tokens are valid: true, expires at: 1783400831611
+[debug] [2026-07-07T04:08:44.239Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/ecoinquiry-app/sites/ecoinquiry-app [none]
+[debug] [2026-07-07T04:08:45.561Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/ecoinquiry-app/sites/ecoinquiry-app 200
+[debug] [2026-07-07T04:08:45.561Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/ecoinquiry-app/sites/ecoinquiry-app {"name":"projects/ecoinquiry-app/sites/ecoinquiry-app","defaultUrl":"https://ecoinquiry-app.web.app","type":"DEFAULT_SITE"}
+[info] ▲ Next.js 16.2.10 (Turbopack)
+
+[info] 
+
+[info]   Creating an optimized production build ...
+
+[info] ✓ Compiled successfully in 5.1s
+
+[info]   Running TypeScript ...
+
+[info] Failed to type check.
+
+
+[info] ./src/app/page.tsx:127:20
+Type error: Argument of type '{ margin: number; filename: string; image: { type: string; quality: number; }; html2canvas: { scale: number; useCORS: boolean; }; jsPDF: { unit: string; format: string; orientation: string; }; }' is not assignable to parameter of type 'Html2PdfOptions'.
+  The types of 'image.type' are incompatible between these types.
+    Type 'string' is not assignable to type '"jpeg" | "png" | "webp" | undefined'.
+
+  125 |     };
+  126 |
+> 127 |     html2pdf().set(opt).from(element).save();
+      |                    ^
+  128 |   };
+  129 |
+  130 |   return (
+
+[info] Next.js build worker exited with code: 1 and signal: null
+
+[debug] [2026-07-07T04:09:01.476Z] Error: ENOENT: no such file or directory, open 'C:\Users\user\vibe-coding\환경교육자료\eco-inquiry-app\.next\export-marker.json'
+[error] 
+[error] Error: An unexpected error has occurred.
