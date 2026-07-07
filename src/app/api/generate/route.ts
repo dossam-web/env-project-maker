@@ -3,6 +3,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
+export const maxDuration = 60; // Set Vercel max execution time to 60 seconds
+
 export async function POST(req: Request) {
   try {
     const { theme, problem, region, subRegion } = await req.json();

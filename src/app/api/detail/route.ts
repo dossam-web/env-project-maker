@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI, Type } from "@google/genai";
 
+export const maxDuration = 60; // Set Vercel max execution time to 60 seconds
+
 export async function POST(req: Request) {
   try {
     const { hypothesis, theme, problem } = await req.json();
