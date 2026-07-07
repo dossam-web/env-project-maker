@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Settings, ArrowRight, ArrowLeft, Search, CheckCircle2, FlaskConical, Download, Loader2, BookOpen, MessageSquare, Copy } from "lucide-react";
+import { ArrowRight, ArrowLeft, Search, CheckCircle2, FlaskConical, Download, Loader2, BookOpen, MessageSquare, Copy } from "lucide-react";
 
 export default function Home() {
   const [step, setStep] = useState(1);
@@ -9,7 +9,6 @@ export default function Home() {
   const [region, setRegion] = useState("");
   const [subRegion, setSubRegion] = useState("");
   const [problem, setProblem] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState("");
@@ -17,10 +16,6 @@ export default function Home() {
   // Detail state
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailResult, setDetailResult] = useState<any>(null);
-  
-  // PDF settings state
-  const [schoolName, setSchoolName] = useState("ㅇㅇ고등학교");
-  const [programName, setProgramName] = useState("과학과제연구 탐구계획서");
   
   // Chatbot states
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -133,7 +128,7 @@ export default function Home() {
     const element = pdfRef.current;
     const opt: any = {
       margin: 15,
-      filename: `${schoolName}_${programName}.pdf`,
+      filename: `EcoInquiry_탐구계획서.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -197,48 +192,9 @@ export default function Home() {
 
   return (
     <>
-      <button className="setting-btn" onClick={() => setShowSettings(true)} title="API 설정">
-        <Settings size={20} />
-      </button>
-
-      {showSettings && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 style={{ marginTop: 0, color: "var(--primary)" }}>⚙️ 설정</h3>
-            
-
-            <div className="form-group" style={{ marginTop: "1rem" }}>
-              <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--primary)" }}>📄 PDF 양식 설정</h4>
-              <label className="form-label">학교명/소속</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                value={schoolName} 
-                onChange={e => setSchoolName(e.target.value)}
-                placeholder="예: 한국과학고등학교" 
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">프로그램명</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                value={programName} 
-                onChange={e => setProgramName(e.target.value)}
-                placeholder="예: 2024년 1학기 과학과제연구" 
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: "1.5rem" }}>
-              <button className="btn btn-secondary" onClick={() => setShowSettings(false)}>닫기</button>
-
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="container">
         <div className="glass-card">
-          <h1 className="title">🌿 과학과제연구</h1>
+          <h1 className="title">🌿 EcoInquiry</h1>
           <p className="subtitle">나만의 환경 탐구 가설 찾기</p>
 
           {step < 4 && (
@@ -444,8 +400,7 @@ export default function Home() {
                 {/* PDF Content Area */}
                 <div ref={pdfRef} style={{ padding: "10px" }}>
                   <div style={{ textAlign: "center", borderBottom: "2px solid #333", paddingBottom: "1rem", marginBottom: "2rem" }}>
-                    <h1 style={{ fontSize: "2rem", margin: "0 0 0.5rem 0", color: "#111" }}>{programName}</h1>
-                    <h2 style={{ fontSize: "1.2rem", margin: 0, color: "#555", fontWeight: "normal" }}>{schoolName}</h2>
+                    <h1 style={{ fontSize: "2rem", margin: "0", color: "#111" }}>EcoInquiry 탐구계획서</h1>
                   </div>
 
                   <h3 style={{ fontSize: "1.5rem", color: "#111", marginBottom: "1rem" }}>{detailResult.title}</h3>
