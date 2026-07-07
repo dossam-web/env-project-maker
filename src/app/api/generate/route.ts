@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     // Connect to MCP (with Retry for Cold Start & Network Issues)
-    const mcpClient = new Client({ name: "eco-inquiry", version: "1.0.0" }, { capabilities: {} });
+    let mcpClient: Client | null = null;
     let connected = false;
     let attempts = 0;
     let lastError: any = null;
@@ -20,6 +20,7 @@ export async function POST(req: Request) {
     while (!connected && attempts < 3) {
       try {
         attempts++;
+        mcpClient = new Client({ name: "eco-inquiry", version: "1.0.0" }, { capabilities: {} });
         const transport = new SSEClientTransport(
           new URL("https://gepai-mcp.vercel.app/sse"),
           { signal: AbortSignal.timeout(30000) } // Increase timeout to 30s
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!connected) {
+    if (!connected || !mcpClient) {
       throw new Error(`데이터 서버(MCP) 연결에 3회 실패했습니다. 학교망 방화벽 차단이 원인일 수 있습니다. 스마트폰 핫스팟으로 연결 후 다시 시도해주세요. (오류: ${lastError?.message || 'Timeout'})`);
     }
 
