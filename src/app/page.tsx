@@ -76,7 +76,19 @@ export default function Home() {
         <div className="modal-overlay">
           <div className="modal-content">
             <h3 style={{ marginTop: 0, color: "var(--primary)" }}>⚙️ 설정</h3>
-            <p>Gemini 무료 API 키를 입력하세요. 키는 브라우저 로컬 스토리지에만 안전하게 저장됩니다.</p>
+            
+            <div style={{ background: "rgba(34, 197, 94, 0.1)", padding: "1rem", borderRadius: "0.5rem", marginBottom: "1.5rem", fontSize: "0.95rem" }}>
+              <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--primary)" }}>🔑 무료 API 키 발급 안내</h4>
+              <ol style={{ margin: 0, paddingLeft: "1.2rem", lineHeight: 1.6 }}>
+                <li><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: "var(--foreground)", textDecoration: "underline", fontWeight: "bold" }}>Google AI Studio</a>에 구글 계정으로 로그인합니다.</li>
+                <li>좌측 메뉴의 <strong>[Get API key]</strong> 탭에서 <strong>[Create API key]</strong> 버튼을 누릅니다.</li>
+                <li>생성된 영문/숫자 조합의 키(AIzaSy...)를 복사하여 아래에 붙여넣습니다.</li>
+              </ol>
+              <p style={{ margin: "0.8rem 0 0 0", opacity: 0.8, fontSize: "0.85rem", wordBreak: "keep-all" }}>
+                * 해당 키는 선생님의 브라우저 로컬 저장소에만 안전하게 보관되며, 앱 외부로 유출되지 않습니다.
+              </p>
+            </div>
+
             <div className="form-group">
               <label className="form-label">Gemini API Key</label>
               <input 
