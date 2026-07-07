@@ -31,7 +31,7 @@ A student has selected the following inquiry topic and hypothesis for their "과
 3. **실험 재료 목록**: 각 재료의 예상 가격(원)과 구매처(사이언스스타, 한솔교구, 쿠팡, 다이소 등 실제 구매 가능한 곳) 포함
 4. **주차별 실험 일정**: 16주(1학기) 기준, 각 주차별 수행 내용
 5. **안전 유의사항**: 해당 실험에서 주의해야 할 안전 수칙
-6. **참고문헌/선행연구**: (가짜 논문 생성 절대 금지) 반드시 구글 검색을 활용하여 DBpia, RISS, KCI 등에서 검색 가능한 **실제로 존재하는 논문/보고서**만 1~3개 제시하세요. 확실한 실제 논문이 없다면 빈 배열([])을 반환하거나 제목을 "관련자료 없음"으로 반환하세요. 절대 임의로 논문 제목과 저자를 지어내지 마세요.
+6. **참고문헌/선행연구**: 해당 탐구 주제와 관련하여 DBpia, RISS, KCI 등에서 검색하면 관련 연구를 찾을 수 있는 대표적인 논문/보고서 제목 2~3개를 제안해 주세요. 가짜 URL을 생성하지 마시고, URL 필드에는 단순히 'https://www.dbpia.co.kr' 또는 'https://scholar.google.co.kr'을 입력해 주세요. (프론트엔드에서 이 제목을 기반으로 실제 검색결과 페이지로 연결합니다.)
 
 ## 안전 규정 (반드시 준수)
 - 메탄올, 벤젠, 클로로포름, 포름알데히드 등 발암·맹독성 약품 사용 금지
@@ -53,7 +53,6 @@ Please provide the results in JSON format matching the schema exactly.
         model: "gemini-3.5-flash",
         contents: prompt,
         config: {
-          tools: [{ googleSearch: {} }],
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -117,12 +116,11 @@ Please provide the results in JSON format matching the schema exactly.
         }
       });
     } catch (modelErr) {
-      console.error("gemini-3.1-pro failed, falling back to gemini-3.5-flash:", modelErr);
+      console.error("gemini-3.5-flash failed, falling back to gemini-3.5-flash fallback:", modelErr);
       response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
         contents: prompt,
         config: {
-          tools: [{ googleSearch: {} }],
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
