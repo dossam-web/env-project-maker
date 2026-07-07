@@ -7,7 +7,6 @@ export default function Home() {
   const [step, setStep] = useState(1);
   const [theme, setTheme] = useState("");
   const [problem, setProblem] = useState("");
-  const [apiKey, setApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -32,25 +31,12 @@ export default function Home() {
     { id: "물환경", label: "물환경", icon: "💧" }
   ];
 
-  useEffect(() => {
-    const savedKey = localStorage.getItem("geminiApiKey");
-    if (savedKey) setApiKey(savedKey);
-  }, []);
-
-  const saveApiKey = () => {
-    localStorage.setItem("geminiApiKey", apiKey);
-    setShowSettings(false);
-  };
+  // Settings removed
 
   const handleNext = () => setStep(s => s + 1);
   const handlePrev = () => setStep(s => s - 1);
 
   const handleSubmit = async () => {
-    if (!apiKey) {
-      alert("설정(⚙️)에서 Gemini API 키를 먼저 입력해주세요!");
-      setShowSettings(true);
-      return;
-    }
 
     setStep(3); // Loading step
     setLoading(true);
@@ -60,7 +46,7 @@ export default function Home() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme, problem, apiKey })
+        body: JSON.stringify({ theme, problem })
       });
 
       const data = await response.json();
@@ -81,10 +67,7 @@ export default function Home() {
   };
 
   const handleGenerateDetail = async (hypothesis: any) => {
-    if (!apiKey) {
-      alert("API 키가 필요합니다.");
-      return;
-    }
+
     setStep(5); // Detail loading step
     setDetailLoading(true);
     setError("");
@@ -93,7 +76,7 @@ export default function Home() {
       const response = await fetch("/api/detail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hypothesis, theme, problem, apiKey })
+        body: JSON.stringify({ hypothesis, theme, problem })
       });
 
       const data = await response.json();
@@ -138,28 +121,7 @@ export default function Home() {
           <div className="modal-content">
             <h3 style={{ marginTop: 0, color: "var(--primary)" }}>⚙️ 설정</h3>
             
-            <div style={{ background: "rgba(34, 197, 94, 0.1)", padding: "1rem", borderRadius: "0.5rem", marginBottom: "1.5rem", fontSize: "0.95rem" }}>
-              <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--primary)" }}>🔑 무료 API 키 발급 안내</h4>
-              <ol style={{ margin: 0, paddingLeft: "1.2rem", lineHeight: 1.6 }}>
-                <li><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: "var(--foreground)", textDecoration: "underline", fontWeight: "bold" }}>Google AI Studio</a>에 구글 계정으로 로그인합니다.</li>
-                <li>좌측 메뉴의 <strong>[Get API key]</strong> 탭에서 <strong>[Create API key]</strong> 버튼을 누릅니다.</li>
-                <li>생성된 영문/숫자 조합의 키(AIzaSy...)를 복사하여 아래에 붙여넣습니다.</li>
-              </ol>
-              <p style={{ margin: "0.8rem 0 0 0", opacity: 0.8, fontSize: "0.85rem", wordBreak: "keep-all" }}>
-                * 해당 키는 선생님의 브라우저 로컬 저장소에만 안전하게 보관되며, 앱 외부로 유출되지 않습니다.
-              </p>
-            </div>
 
-            <div className="form-group">
-              <label className="form-label">Gemini API Key</label>
-              <input 
-                type="password" 
-                className="form-input" 
-                value={apiKey} 
-                onChange={e => setApiKey(e.target.value)}
-                placeholder="AIzaSy..." 
-              />
-            </div>
             <div className="form-group" style={{ marginTop: "1rem" }}>
               <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--primary)" }}>📄 PDF 양식 설정</h4>
               <label className="form-label">학교명/소속</label>
@@ -182,8 +144,8 @@ export default function Home() {
               />
             </div>
             <div style={{ display: 'flex', gap: '1rem', marginTop: "1.5rem" }}>
-              <button className="btn btn-secondary" onClick={() => setShowSettings(false)}>취소</button>
-              <button className="btn" onClick={saveApiKey}>저장</button>
+              <button className="btn btn-secondary" onClick={() => setShowSettings(false)}>닫기</button>
+
             </div>
           </div>
         </div>
