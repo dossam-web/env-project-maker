@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI, Type } from "@google/genai";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "API Key is required" }, { status: 400 });
     }
 
-    // Connect to MCP (with Retry for Cold Start & Network Issues)
+    // Connect to MCP (Streamable HTTP - stateless)
     let mcpClient: Client | null = null;
     let connected = false;
     let attempts = 0;
@@ -21,9 +21,8 @@ export async function POST(req: Request) {
       try {
         attempts++;
         mcpClient = new Client({ name: "eco-inquiry", version: "1.0.0" }, { capabilities: {} });
-        const transport = new SSEClientTransport(
-          new URL("https://gepai-mcp.vercel.app/sse"),
-          { signal: AbortSignal.timeout(30000) } // Increase timeout to 30s
+        const transport = new StreamableHTTPClientTransport(
+          new URL("https://gepai-mcp.vercel.app/mcp")
         );
         await mcpClient.connect(transport);
         connected = true;
@@ -31,14 +30,13 @@ export async function POST(req: Request) {
         lastError = err;
         console.warn(`MCP Connection attempt ${attempts} failed:`, err.message);
         if (attempts < 3) {
-          // Wait 2 seconds before retrying
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
     }
 
     if (!connected || !mcpClient) {
-      throw new Error(`데이터 서버(MCP) 연결에 3회 실패했습니다. 학교망 방화벽 차단이 원인일 수 있습니다. 스마트폰 핫스팟으로 연결 후 다시 시도해주세요. (오류: ${lastError?.message || 'Timeout'})`);
+      throw new Error(`데이터 서버(MCP) 연결에 3회 실패했습니다. 네트워크 연결 상태를 확인해주세요. (오류: ${lastError?.message || 'Timeout'})`);
     }
 
     let resourcesText = "";
