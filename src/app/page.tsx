@@ -6,6 +6,7 @@ import { Settings, ArrowRight, ArrowLeft, Search, CheckCircle2, FlaskConical, Do
 export default function Home() {
   const [step, setStep] = useState(1);
   const [theme, setTheme] = useState("");
+  const [region, setRegion] = useState("");
   const [problem, setProblem] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,6 +32,9 @@ export default function Home() {
     { id: "물환경", label: "물환경", icon: "💧" }
   ];
 
+  const regions = ["서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"];
+
+
   // Settings removed
 
   const handleNext = () => setStep(s => s + 1);
@@ -46,7 +50,7 @@ export default function Home() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme, problem })
+        body: JSON.stringify({ theme, problem, region })
       });
 
       const data = await response.json();
@@ -166,6 +170,22 @@ export default function Home() {
 
           {step === 1 && (
             <div>
+              <div style={{ marginBottom: "2rem", textAlign: "center" }}>
+                <h3 style={{ marginBottom: "0.5rem" }}>지역(교육청) 선택</h3>
+                <select 
+                  className="form-input" 
+                  style={{ maxWidth: "300px", margin: "0 auto", cursor: "pointer" }}
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                >
+                  <option value="">전국 (전체)</option>
+                  {regions.map(r => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+                <p style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "0.5rem" }}>선택한 지역의 환경교육 자료를 우선적으로 분석합니다.</p>
+              </div>
+
               <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>어떤 환경 문제에 관심이 있나요?</h2>
               <div className="theme-grid">
                 {themes.map(t => (
