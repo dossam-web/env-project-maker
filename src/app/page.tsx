@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Settings, ArrowRight, ArrowLeft, Search, CheckCircle2, FlaskConical, Download, Loader2, BookOpen } from "lucide-react";
+import { Settings, ArrowRight, ArrowLeft, Search, CheckCircle2, FlaskConical, Download, Loader2, BookOpen, MessageSquare, Copy } from "lucide-react";
 
 export default function Home() {
   const [step, setStep] = useState(1);
@@ -20,6 +20,12 @@ export default function Home() {
   // PDF settings state
   const [schoolName, setSchoolName] = useState("ㅇㅇ고등학교");
   const [programName, setProgramName] = useState("과학과제연구 탐구계획서");
+  
+  // Chatbot states
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [isChatting, setIsChatting] = useState(false);
   
   const pdfRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +119,59 @@ export default function Home() {
 
     html2pdf().set(opt).from(element).save();
   };
+
+  const handleCopyHWP = () => {
+    if (!detailResult || !pdfRef.current) return;
+    const html = pdfRef.current.innerHTML;
+    try {
+      const blob = new Blob([html], { type: 'text/html' });
+      // Use window.ClipboardItem fallback
+      const ClipboardItemCtor = (window as any).ClipboardItem;
+      if (ClipboardItemCtor) {
+        const clipboardItem = new ClipboardItemCtor({ 'text/html': blob });
+        navigator.clipboard.write([clipboardItem]).then(() => {
+          alert("한글(HWP) 복사가 완료되었습니다. 빈 문서에 붙여넣기(Ctrl+V) 하세요!");
+        });
+      } else {
+        alert("이 브라우저에서는 클립보드 복사를 지원하지 않습니다.");
+      }
+    } catch (e) {
+      alert("클립보드 복사에 실패했습니다.");
+    }
+  };
+
+  const handleChatSubmit = async (idx: number, item: any) => {
+    if (!chatInput.trim()) return;
+    
+    const userMsg = { role: "user", content: chatInput };
+    const currentHistory = [...chatHistory, userMsg];
+    setChatHistory(currentHistory);
+    setChatInput("");
+    setIsChatting(true);
+
+    try {
+      const res = await fetch("/api/refine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ originalHypothesis: item, chatHistory: currentHistory, userMessage: userMsg.content })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      const aiMsg = { role: "ai", content: data.reply };
+      setChatHistory([...currentHistory, aiMsg]);
+      
+      const newResults = { ...results };
+      newResults.hypotheses[idx] = data.updatedHypothesis;
+      setResults(newResults);
+    } catch (err: any) {
+      alert("수정에 실패했습니다: " + err.message);
+      setChatHistory(chatHistory);
+    } finally {
+      setIsChatting(false);
+    }
+  };
+
 
   return (
     <>
@@ -273,6 +332,38 @@ export default function Home() {
                   <button className="btn" style={{ width: "100%" }} onClick={() => handleGenerateDetail(item)}>
                     이 가설로 상세 계획서 생성하기 <ArrowRight size={18} />
                   </button>
+                  
+                  <button className="btn btn-secondary" style={{ width: "100%", marginTop: "0.5rem" }} onClick={() => {
+                    if (editingIndex === idx) {
+                      setEditingIndex(null);
+                    } else {
+                      setEditingIndex(idx);
+                      setChatHistory([]);
+                      setChatInput("");
+                    }
+                  }}>
+                    <MessageSquare size={18} /> {editingIndex === idx ? "챗봇 닫기" : "AI와 대화하며 가설 다듬기"}
+                  </button>
+
+                  {editingIndex === idx && (
+                    <div style={{ marginTop: "1rem", border: "1px solid var(--glass-border)", borderRadius: "8px", padding: "1rem", background: "rgba(255, 255, 255, 0.8)" }}>
+                      <div style={{ maxHeight: "200px", overflowY: "auto", marginBottom: "1rem", fontSize: "0.9rem" }}>
+                        {chatHistory.length === 0 && <p style={{ color: "#666", textAlign: "center", margin: "1rem 0" }}>어떤 부분을 수정하고 싶으신가요?<br/>(예: 독립변인을 온도로 바꿔줘)</p>}
+                        {chatHistory.map((msg, i) => (
+                          <div key={i} style={{ marginBottom: "0.5rem", textAlign: msg.role === "user" ? "right" : "left" }}>
+                            <span style={{ display: "inline-block", background: msg.role === "user" ? "var(--primary)" : "#f1f5f9", color: msg.role === "user" ? "white" : "black", padding: "0.5rem 1rem", borderRadius: "1rem", maxWidth: "90%", textAlign: "left", whiteSpace: "pre-wrap" }}>
+                              {msg.content}
+                            </span>
+                          </div>
+                        ))}
+                        {isChatting && <div style={{ textAlign: "left" }}><span style={{ display: "inline-block", background: "#f1f5f9", padding: "0.5rem 1rem", borderRadius: "1rem" }}><Loader2 size={14} className="animate-spin" /> 수정 중...</span></div>}
+                      </div>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <input type="text" className="form-input" style={{ flex: 1, margin: 0 }} placeholder="수정 요청사항을 입력하세요..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleChatSubmit(idx, item)} disabled={isChatting} />
+                        <button className="btn" onClick={() => handleChatSubmit(idx, item)} disabled={isChatting || !chatInput.trim()}>전송</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -296,9 +387,14 @@ export default function Home() {
                 <button className="btn btn-secondary" onClick={() => setStep(4)}>
                   <ArrowLeft size={18} /> 가설 목록으로
                 </button>
-                <button className="btn" onClick={handleDownloadPDF} style={{ background: "var(--primary)", color: "white" }}>
-                  <Download size={18} /> PDF 다운로드
-                </button>
+                <div style={{ display: 'flex', gap: "0.5rem" }}>
+                  <button className="btn" onClick={handleCopyHWP} style={{ background: "#2563eb", color: "white" }}>
+                    <Copy size={18} /> HWP(한글) 복사
+                  </button>
+                  <button className="btn" onClick={handleDownloadPDF} style={{ background: "var(--primary)", color: "white" }}>
+                    <Download size={18} /> PDF 다운로드
+                  </button>
+                </div>
               </div>
 
               <div className="pdf-container" style={{ background: "white", padding: "2rem", borderRadius: "8px", color: "#333", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
