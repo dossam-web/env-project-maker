@@ -27,46 +27,54 @@ export async function POST(req: Request) {
         const transport = new StreamableHTTPClientTransport(
           new URL("https://gepai-mcp.vercel.app/mcp")
         );
-        await mcpClient.connect(transport);
+        // 5초 타임아웃 적용
+        const connectPromise = mcpClient.connect(transport);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("MCP Connection Timeout")), 5000));
+        await Promise.race([connectPromise, timeoutPromise]);
+        
         connected = true;
       } catch (err: any) {
         lastError = err;
         console.warn(`MCP Connection attempt ${attempts} failed:`, err.message);
         if (attempts < 3) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
     }
 
     if (!connected || !mcpClient) {
-      throw new Error(`데이터 서버(MCP) 연결에 3회 실패했습니다. 네트워크 연결 상태를 확인해주세요. (오류: ${lastError?.message || 'Timeout'})`);
+      console.warn(`데이터 서버(MCP) 연결에 3회 실패했습니다. 일반 AI 지식을 사용하여 진행합니다. (오류: ${lastError?.message || 'Timeout'})`);
     }
 
     let resourcesText = "";
     
     // Fetch relevant materials from MCP
-    try {
-      const searchArgs: any = { query: problem, school_level: "고등학교" };
-      if (region) {
-        searchArgs.office = region;
+    if (connected && mcpClient) {
+      try {
+        const searchArgs: any = { query: problem, school_level: "고등학교" };
+        if (region) {
+          searchArgs.office = region;
+        }
+        const searchRes: any = await mcpClient.callTool({
+          name: "search_resources",
+          arguments: searchArgs
+        });
+        resourcesText += "=== Resources ===\n" + JSON.stringify(searchRes.content, null, 2) + "\n";
+      } catch (e) {
+        console.warn("search_resources failed:", e);
       }
-      const searchRes: any = await mcpClient.callTool({
-        name: "search_resources",
-        arguments: searchArgs
-      });
-      resourcesText += "=== Resources ===\n" + JSON.stringify(searchRes.content, null, 2) + "\n";
-    } catch (e) {
-      console.warn("search_resources failed:", e);
     }
 
-    try {
-      const standardsRes: any = await mcpClient.callTool({
-        name: "search_standards",
-        arguments: { query: theme, school_level: "고등학교" }
-      });
-      resourcesText += "=== Standards ===\n" + JSON.stringify(standardsRes.content, null, 2) + "\n";
-    } catch (e) {
-      console.warn("search_standards failed:", e);
+    if (connected && mcpClient) {
+      try {
+        const standardsRes: any = await mcpClient.callTool({
+          name: "search_standards",
+          arguments: { query: theme, school_level: "고등학교" }
+        });
+        resourcesText += "=== Standards ===\n" + JSON.stringify(standardsRes.content, null, 2) + "\n";
+      } catch (e) {
+        console.warn("search_standards failed:", e);
+      }
     }
 
     // Call Gemini to generate hypotheses
@@ -190,11 +198,18 @@ Please provide the results in JSON format matching the schema exactly.
     }
 
     const outputText = response.text || "{}";
-    console.log("Gemini raw response:", outputText.substring(0, 500));
     const result = JSON.parse(outputText);
-    return NextResponse.json(result);
+    return NextResponse.json({ hypotheses: result.hypotheses || [] });
   } catch (error: any) {
     console.error("Generate error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    let errorMessage = error.message || "알 수 없는 오류가 발생했습니다.";
+    if (errorMessage.includes("429") || errorMessage.includes("exceeded your current quota") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
+      errorMessage = "AI 서버 사용량이 초과되었습니다 (무료 요금제 한도 도달). 약 1~2분 뒤에 다시 시도해주시거나, 구글 AI Studio에서 결제 계정을 연동해 주세요.";
+    } else if (errorMessage.includes("API key not valid") || errorMessage.includes("API_KEY_INVALID")) {
+      errorMessage = "입력된 Gemini API 키가 올바르지 않습니다. 키 값을 다시 확인해 주세요.";
+    } else if (errorMessage.includes("fetch failed") || errorMessage.includes("failed to fetch")) {
+      errorMessage = "데이터베이스 서버 또는 AI 서버와의 네트워크 통신에 실패했습니다. 인터넷 연결 상태를 확인해 주세요.";
+    }
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

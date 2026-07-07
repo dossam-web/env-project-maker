@@ -31,7 +31,7 @@ A student has selected the following inquiry topic and hypothesis for their "과
 3. **실험 재료 목록**: 각 재료의 예상 가격(원)과 구매처(사이언스스타, 한솔교구, 쿠팡, 다이소 등 실제 구매 가능한 곳) 포함
 4. **주차별 실험 일정**: 16주(1학기) 기준, 각 주차별 수행 내용
 5. **안전 유의사항**: 해당 실험에서 주의해야 할 안전 수칙
-6. **참고문헌/선행연구**: 관련 논문, 보고서, 교육자료 등 3~5개 (제목, 저자/기관, 연도, URL 또는 검색 키워드 포함)
+6. **참고문헌/선행연구**: (가짜 논문 생성 절대 금지) 반드시 구글 검색을 활용하여 DBpia, RISS, KCI 등에서 검색 가능한 **실제로 존재하는 논문/보고서**만 1~3개 제시하세요. 확실한 실제 논문이 없다면 빈 배열([])을 반환하거나 제목을 "관련자료 없음"으로 반환하세요. 절대 임의로 논문 제목과 저자를 지어내지 마세요.
 
 ## 안전 규정 (반드시 준수)
 - 메탄올, 벤젠, 클로로포름, 포름알데히드 등 발암·맹독성 약품 사용 금지
@@ -53,6 +53,7 @@ Please provide the results in JSON format matching the schema exactly.
         model: "gemini-3.1-pro",
         contents: prompt,
         config: {
+          tools: [{ googleSearch: {} }],
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -121,6 +122,7 @@ Please provide the results in JSON format matching the schema exactly.
         model: "gemini-3.5-flash",
         contents: prompt,
         config: {
+          tools: [{ googleSearch: {} }],
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -187,6 +189,14 @@ Please provide the results in JSON format matching the schema exactly.
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Detail generate error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    let errorMessage = error.message || "알 수 없는 오류가 발생했습니다.";
+    if (errorMessage.includes("429") || errorMessage.includes("exceeded your current quota") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
+      errorMessage = "AI 서버 사용량이 초과되었습니다 (무료 요금제 한도 도달). 약 1~2분 뒤에 다시 시도해주시거나, 구글 AI Studio에서 결제 계정을 연동해 주세요.";
+    } else if (errorMessage.includes("API key not valid") || errorMessage.includes("API_KEY_INVALID")) {
+      errorMessage = "입력된 Gemini API 키가 올바르지 않습니다. 키 값을 다시 확인해 주세요.";
+    } else if (errorMessage.includes("fetch failed") || errorMessage.includes("failed to fetch")) {
+      errorMessage = "네트워크 통신에 실패했습니다. 인터넷 연결 상태를 확인해 주세요.";
+    }
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

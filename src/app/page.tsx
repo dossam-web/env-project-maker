@@ -22,8 +22,33 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isChatting, setIsChatting] = useState(false);
+
+  // Contact modal states
+  const [isContactOpen, setIsContactOpen] = useState(false);
+  const [feedbackType, setFeedbackType] = useState("오류 제보");
+  const [feedbackContent, setFeedbackContent] = useState("");
   
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  const handleFeedbackSubmit = () => {
+    if (!feedbackContent.trim()) {
+      alert("피드백 내용을 입력해주세요.");
+      return;
+    }
+    const subject = encodeURIComponent(`[EcoInquiry 피드백] ${feedbackType}`);
+    const body = encodeURIComponent(
+      `안녕하세요, EcoInquiry 개발자님.\n\n` +
+      `[피드백 유형]: ${feedbackType}\n` +
+      `[내용]:\n${feedbackContent}\n\n` +
+      `----------------------------------------\n` +
+      `* OS: ${navigator.userAgent}\n` +
+      `* 시간: ${new Date().toLocaleString()}\n`
+    );
+    
+    window.location.href = `mailto:akanffl@gmail.com?subject=${subject}&body=${body}`;
+    setIsContactOpen(false);
+    setFeedbackContent("");
+  };
 
   const themes = [
     { id: "기후변화", label: "기후변화", icon: "🌍" },
@@ -178,9 +203,11 @@ export default function Home() {
       const aiMsg = { role: "ai", content: data.reply };
       setChatHistory([...currentHistory, aiMsg]);
       
-      const newResults = { ...results };
-      newResults.hypotheses[idx] = data.updatedHypothesis;
-      setResults(newResults);
+      if (data.isValid) {
+        const newResults = { ...results };
+        newResults.hypotheses[idx] = data.updatedHypothesis;
+        setResults(newResults);
+      }
     } catch (err: any) {
       alert("수정에 실패했습니다: " + err.message);
       setChatHistory(chatHistory);
@@ -300,6 +327,12 @@ export default function Home() {
             <div>
               <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>✨ 추천 탐구 가설 및 주제</h2>
               
+              {error && (
+                <div style={{ background: "#fee2e2", color: "#b91c1c", padding: "1rem", borderRadius: "8px", marginBottom: "2rem", textAlign: "center", fontWeight: "bold" }}>
+                  ⚠️ {error}
+                </div>
+              )}
+
               {(results.hypotheses || []).map((item: any, idx: number) => (
                 <div key={idx} className="result-card">
                   <div className="tag">추천 {idx + 1}</div>
@@ -357,9 +390,9 @@ export default function Home() {
                         ))}
                         {isChatting && <div style={{ textAlign: "left" }}><span style={{ display: "inline-block", background: "#f1f5f9", padding: "0.5rem 1rem", borderRadius: "1rem" }}><Loader2 size={14} className="animate-spin" /> 수정 중...</span></div>}
                       </div>
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <input type="text" className="form-input" style={{ flex: 1, margin: 0 }} placeholder="수정 요청사항을 입력하세요..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleChatSubmit(idx, item)} disabled={isChatting} />
-                        <button className="btn" onClick={() => handleChatSubmit(idx, item)} disabled={isChatting || !chatInput.trim()}>전송</button>
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        <input type="text" className="form-input" style={{ flex: 1, minWidth: 0, margin: 0, background: "white", color: "#111", border: "1px solid #ccc" }} placeholder="예: 독립변인을 온도로 바꿔줘" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleChatSubmit(idx, item)} disabled={isChatting} />
+                        <button className="btn" style={{ flexShrink: 0, whiteSpace: "nowrap", padding: "0.75rem 1.5rem", width: "auto" }} onClick={() => handleChatSubmit(idx, item)} disabled={isChatting || !chatInput.trim()}>전송</button>
                       </div>
                     </div>
                   )}
@@ -480,15 +513,25 @@ export default function Home() {
                       <BookOpen size={18} /> 참고문헌 및 선행연구
                     </h4>
                     <ul style={{ paddingLeft: "1.5rem", margin: "0.5rem 0", lineHeight: 1.6 }}>
-                      {detailResult.references.map((r: any, i: number) => (
-                        <li key={i} style={{ marginBottom: "0.5rem" }}>
-                          <strong>{r.title}</strong> ({r.author}, {r.year})
-                          <br />
-                          <a href={r.url.startsWith('http') ? r.url : `https://scholar.google.co.kr/scholar?q=${encodeURIComponent(r.url)}`} target="_blank" rel="noreferrer" style={{ color: "#2563eb", textDecoration: "underline", fontSize: "0.9em" }}>
-                            {r.url.startsWith('http') ? '링크 보기' : `검색: ${r.url}`}
-                          </a>
-                        </li>
-                      ))}
+                      {!detailResult.references || detailResult.references.length === 0 || detailResult.references[0].title.includes("관련자료 없음") ? (
+                        <li style={{ listStyle: "none", color: "#666" }}>해당 주제와 직접적으로 연관된 신뢰할 수 있는 학술 논문/자료를 찾지 못했습니다.</li>
+                      ) : (
+                        detailResult.references.map((r: any, i: number) => {
+                          const isDbpiaMain = r.url.includes('dbpia.co.kr') && r.url.length < 35;
+                          const linkHref = isDbpiaMain 
+                            ? `https://www.dbpia.co.kr/search/topSearch?searchOption=all&query=${encodeURIComponent(r.title)}`
+                            : (r.url.startsWith('http') ? r.url : `https://scholar.google.co.kr/scholar?q=${encodeURIComponent(r.title)}`);
+                          return (
+                            <li key={i} style={{ marginBottom: "0.5rem" }}>
+                              <strong>{r.title}</strong> ({r.author}, {r.year})
+                              <br />
+                              <a href={linkHref} target="_blank" rel="noreferrer" style={{ color: "#2563eb", textDecoration: "underline", fontSize: "0.9em" }}>
+                                {isDbpiaMain ? 'DBpia에서 검색하기' : (r.url.startsWith('http') ? '링크 보기' : `검색: ${r.url}`)}
+                              </a>
+                            </li>
+                          );
+                        })
+                      )}
                     </ul>
                   </div>
 
@@ -501,7 +544,79 @@ export default function Home() {
         <footer style={{ textAlign: "center", marginTop: "2rem", padding: "1rem", fontSize: "0.85rem", opacity: 0.7 }}>
           <p style={{ margin: "0.2rem 0" }}>Made by 김도형 (청학고등학교)</p>
           <p style={{ margin: "0.2rem 0" }}>Powered by 공주대 환경교육과 이재영 교수 연구팀 GEP-AI</p>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => setIsContactOpen(true)} 
+            style={{ marginTop: "1rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", width: "auto", padding: "0.5rem 1rem", fontSize: "0.8rem" }}
+          >
+            <MessageSquare size={14} /> 개발자에게 문의 / 피드백
+          </button>
         </footer>
+
+        {isContactOpen && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+            padding: "1rem"
+          }}>
+            <div className="glass-card" style={{ maxWidth: "500px", width: "100%", padding: "2rem", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.15)", textAlign: "left" }}>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: "bold", marginBottom: "0.5rem", color: "var(--primary)" }}>📬 개발자에게 문의 / 피드백</h3>
+              <p style={{ fontSize: "0.85rem", opacity: 0.8, marginBottom: "1.5rem" }}>
+                서비스 이용 중 불편한 점이나 제안 사항을 메일로 알려주세요.
+              </p>
+              
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label className="form-label" style={{ fontWeight: "bold", marginBottom: "0.5rem", display: "block" }}>피드백 유형</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {[
+                    { value: "오류 제보", label: "🐛 서비스 오류 / 작동 안 됨" },
+                    { value: "데이터 제안", label: "📚 데이터 오류 / 학술 자료 건의" },
+                    { value: "기능 제안", label: "💡 기능 제안 / 사용 아이디어" },
+                    { value: "기타 문의", label: "💬 기타 문의" }
+                  ].map(type => (
+                    <label key={type.value} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.9rem", color: "var(--foreground)" }}>
+                      <input 
+                        type="radio" 
+                        name="feedbackType" 
+                        value={type.value} 
+                        checked={feedbackType === type.value} 
+                        onChange={() => setFeedbackType(type.value)}
+                        style={{ accentColor: "var(--primary)" }}
+                      />
+                      {type.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label className="form-label" style={{ fontWeight: "bold", marginBottom: "0.5rem", display: "block" }}>내용</label>
+                <textarea 
+                  className="form-input" 
+                  rows={5} 
+                  style={{ background: "white", color: "#111", border: "1px solid #ccc", width: "100%" }}
+                  placeholder="오류 현상이나 건의 사항을 자유롭게 적어주세요." 
+                  value={feedbackContent} 
+                  onChange={e => setFeedbackContent(e.target.value)} 
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
+                <button className="btn btn-secondary" style={{ width: "auto" }} onClick={() => { setIsContactOpen(false); setFeedbackContent(""); }}>취소</button>
+                <button className="btn" style={{ width: "auto" }} onClick={handleFeedbackSubmit}>이메일 전송하기</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

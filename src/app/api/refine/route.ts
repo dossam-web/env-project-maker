@@ -31,8 +31,10 @@ ${historyText}
 
 The student now asks: "${userMessage}"
 
-First, update the hypothesis based on the student's request. Keep it realistic for a high school level experiment.
-Second, provide a brief, friendly, encouraging message explaining what you changed and asking if they like it.
+The student now asks: "${userMessage}"
+
+First, evaluate if the student's request is an appropriate, safe, and scientifically valid request to modify the science inquiry project. If it is completely irrelevant, dangerous (e.g. using restricted chemicals or unethical animal testing), or not suitable, set "isValid" to false and provide a friendly "reply" explaining why it cannot be changed, leaving the "updatedHypothesis" the same as the original.
+If the request is valid, set "isValid" to true, update the hypothesis based on the student's request (keep it realistic for high school), and provide a brief, friendly, encouraging "reply" explaining what you changed.
 
 Please provide the results in JSON format matching the schema exactly.
 `;
@@ -47,6 +49,7 @@ Please provide the results in JSON format matching the schema exactly.
           responseSchema: {
             type: Type.OBJECT,
             properties: {
+              isValid: { type: Type.BOOLEAN, description: "요청이 적절하고 안전한지 여부" },
               reply: { type: Type.STRING, description: "학생에게 건네는 친절한 피드백 메시지" },
               updatedHypothesis: {
                 type: Type.OBJECT,
@@ -82,6 +85,7 @@ Please provide the results in JSON format matching the schema exactly.
           responseSchema: {
             type: Type.OBJECT,
             properties: {
+              isValid: { type: Type.BOOLEAN },
               reply: { type: Type.STRING },
               updatedHypothesis: {
                 type: Type.OBJECT,
@@ -113,7 +117,15 @@ Please provide the results in JSON format matching the schema exactly.
     const result = JSON.parse(outputText);
     return NextResponse.json(result);
   } catch (error: any) {
-    console.error("Refine error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Refine generate error:", error);
+    let errorMessage = error.message || "알 수 없는 오류가 발생했습니다.";
+    if (errorMessage.includes("429") || errorMessage.includes("exceeded your current quota") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
+      errorMessage = "AI 서버 사용량이 초과되었습니다 (무료 요금제 한도 도달). 약 1~2분 뒤에 다시 시도해주시거나, 구글 AI Studio에서 결제 계정을 연동해 주세요.";
+    } else if (errorMessage.includes("API key not valid") || errorMessage.includes("API_KEY_INVALID")) {
+      errorMessage = "입력된 Gemini API 키가 올바르지 않습니다. 키 값을 다시 확인해 주세요.";
+    } else if (errorMessage.includes("fetch failed") || errorMessage.includes("failed to fetch")) {
+      errorMessage = "네트워크 통신에 실패했습니다. 인터넷 연결 상태를 확인해 주세요.";
+    }
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
