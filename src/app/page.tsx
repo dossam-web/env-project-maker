@@ -56,6 +56,10 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "결과를 가져오는데 실패했습니다.");
       
+      if (!data.hypotheses || !Array.isArray(data.hypotheses)) {
+        throw new Error("AI 응답 형식이 올바르지 않습니다. 다시 시도해주세요.");
+      }
+
       setResults(data);
       setStep(4); // Results step
     } catch (err: any) {
@@ -178,7 +182,7 @@ export default function Home() {
             <div>
               <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>✨ 추천 탐구 가설 및 주제</h2>
               
-              {results.hypotheses.map((item: any, idx: number) => (
+              {(results.hypotheses || []).map((item: any, idx: number) => (
                 <div key={idx} className="result-card">
                   <div className="tag">추천 {idx + 1}</div>
                   <h3>{item.topic}</h3>
