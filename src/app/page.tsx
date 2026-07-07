@@ -211,7 +211,7 @@ export default function Home() {
                 <h3 style={{ marginBottom: "0.5rem" }}>지역(교육청) 선택</h3>
                 <div style={{ display: "flex", gap: "1rem", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
                   <select 
-                    className="form-input" 
+                    className="form-input region-select" 
                     style={{ maxWidth: "300px", margin: 0, cursor: "pointer" }}
                     value={region}
                     onChange={(e) => {
@@ -227,7 +227,7 @@ export default function Home() {
 
                   {region && subRegionsMap[region] && (
                     <select 
-                      className="form-input" 
+                      className="form-input region-select" 
                       style={{ maxWidth: "300px", margin: 0, cursor: "pointer" }}
                       value={subRegion}
                       onChange={(e) => setSubRegion(e.target.value)}
