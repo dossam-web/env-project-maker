@@ -497,6 +497,11 @@ export default function Home() {
             </div>
           )}
         </div>
+        
+        <footer style={{ textAlign: "center", marginTop: "2rem", padding: "1rem", fontSize: "0.85rem", opacity: 0.7 }}>
+          <p style={{ margin: "0.2rem 0" }}>Made by 김도형 (청학고등학교)</p>
+          <p style={{ margin: "0.2rem 0" }}>Powered by 공주대 환경교육과 이재영 교수 연구팀 GEP-AI</p>
+        </footer>
       </div>
     </>
   );
