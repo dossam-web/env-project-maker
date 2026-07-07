@@ -11,10 +11,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "API Key is required" }, { status: 400 });
     }
 
-    // Connect to MCP
-    const transport = new SSEClientTransport(new URL("https://gepai-mcp.vercel.app/sse"));
+    // Connect to MCP (with Retry for Cold Start & Network Issues)
     const mcpClient = new Client({ name: "eco-inquiry", version: "1.0.0" }, { capabilities: {} });
-    await mcpClient.connect(transport);
+    let connected = false;
+    let attempts = 0;
+    let lastError: any = null;
+
+    while (!connected && attempts < 3) {
+      try {
+        attempts++;
+        const transport = new SSEClientTransport(
+          new URL("https://gepai-mcp.vercel.app/sse"),
+          { signal: AbortSignal.timeout(30000) } // Increase timeout to 30s
+        );
+        await mcpClient.connect(transport);
+        connected = true;
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`MCP Connection attempt ${attempts} failed:`, err.message);
+        if (attempts < 3) {
+          // Wait 2 seconds before retrying
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    }
+
+    if (!connected) {
+      throw new Error(`데이터 서버(MCP) 연결에 3회 실패했습니다. 학교망 방화벽 차단이 원인일 수 있습니다. 스마트폰 핫스팟으로 연결 후 다시 시도해주세요. (오류: ${lastError?.message || 'Timeout'})`);
+    }
 
     let resourcesText = "";
     
