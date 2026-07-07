@@ -115,12 +115,33 @@ Please provide the results in JSON format matching the schema exactly.
         model: "gemini-3.5-flash",
         contents: prompt,
         config: {
-          responseMimeType: "application/json"
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              hypotheses: {
+                type: Type.ARRAY,
+                description: "List of recommended hypotheses and inquiry projects",
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    topic: { type: Type.STRING, description: "탐구 프로젝트 제목" },
+                    hypothesis: { type: Type.STRING, description: "검증할 구체적인 가설" },
+                    method: { type: Type.STRING, description: "가설을 검증하기 위한 탐구/실험 설계 요약" },
+                    standard: { type: Type.STRING, description: "관련된 성취기준 혹은 참고 자료" }
+                  },
+                  required: ["topic", "hypothesis", "method", "standard"]
+                }
+              }
+            },
+            required: ["hypotheses"]
+          }
         }
       });
     }
 
     const outputText = response.text || "{}";
+    console.log("Gemini raw response:", outputText.substring(0, 500));
     const result = JSON.parse(outputText);
     return NextResponse.json(result);
   } catch (error: any) {
