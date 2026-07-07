@@ -65,19 +65,40 @@ export async function POST(req: Request) {
     // Call Gemini to generate hypotheses
     const ai = new GoogleGenAI({ apiKey });
     const prompt = `
-You are an expert environmental science educator for high school students.
+You are an expert environmental science educator for Korean high school students.
 The student is doing a "과학과제연구" (Science Inquiry/Research) project.
 They chose the theme "${theme}" and described their problem/observation as: "${problem}".
 
 Using the following MCP database context, generate 3-4 appropriate inquiry topics and hypotheses.
-The experiment should NOT be a simple verification experiment, but a creative and rigorous inquiry suitable for high school students.
-All text must be in Korean.
+
+## 핵심 조건
+- 단순 검증실험이 아닌, 학생이 스스로 세운 독창적 가설을 검증하는 탐구실험이어야 합니다.
+- 모든 텍스트는 한국어로 작성합니다.
+
+## 고등학교 실험 안전 규정 (반드시 준수)
+아래에 해당하는 실험은 절대 추천하지 마세요:
+- **사용 금지 약품:** 메탄올, 벤젠, 클로로포름, 포름알데히드(포르말린), 수은, 크롬산, 사염화탄소, 아질산나트륨 등 발암물질·맹독성 약품
+- **금지 실험:** 척추동물 해부실험(개구리, 쥐 등), 살아있는 동물에 대한 고통 유발 실험, 방사성 동위원소 사용 실험, 고압가스(수소, 아세틸렌) 실험
+- **제한 약품:** 진한 황산·진한 질산·진한 염산은 반드시 교사 감독 하 소량만 사용 (가능하면 묽은 용액으로 대체 권장)
+- **전기 안전:** 가정용 전원(220V) 직접 사용 금지, 저전압 전원장치(DC 12V 이하) 사용 권장
+
+## 실현 가능성 조건 (반드시 준수)
+- 실험 재료는 일반 과학 교구 업체(사이언스스타, 한솔교구 등)나 온라인 쇼핑몰에서 구매 가능한 것만 사용
+- 고가의 전문 분석장비(SEM, GC-MS, 분광광도계 등)가 필요한 실험은 피하고, 고등학교 과학실에서 보유 가능한 장비(현미경, pH미터, 전자저울, 디지털 온도계, 간이 분광기 등)로 수행 가능해야 함
+- 실험 기간이 1학기(약 4개월) 이내에 완료 가능해야 함
+- 야외 현장조사가 필요한 경우, 학교 주변 또는 근교에서 수행 가능한 범위여야 함
+
+## 추천 실험 방법 예시 (이런 방향을 권장)
+- 식물 성장 비교 실험, 수질/토양 분석(간이 키트 활용), 미생물 배양, 센서 기반 환경 데이터 수집
+- 설문조사·인식 조사 병행 연구, 앱/센서를 활용한 시민과학형 탐구
+- 대조군·실험군 설계가 명확한 비교 실험
 
 Context Data from gepai-mcp:
 ${resourcesText || "No additional context found. Use your general knowledge."}
 
 Please provide the results in JSON format matching the schema exactly.
 `;
+
 
     // Try gemini-3.1-pro first, if not available fallback to gemini-3.5-flash
     let response;
