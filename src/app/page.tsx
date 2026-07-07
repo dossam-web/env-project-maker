@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Settings, ArrowRight, ArrowLeft, Search, CheckCircle2, FlaskConical } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Settings, ArrowRight, ArrowLeft, Search, CheckCircle2, FlaskConical, Download, Loader2, BookOpen } from "lucide-react";
 
 export default function Home() {
   const [step, setStep] = useState(1);
@@ -12,6 +12,16 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState("");
+  
+  // Detail state
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailResult, setDetailResult] = useState<any>(null);
+  
+  // PDF settings state
+  const [schoolName, setSchoolName] = useState("ㅇㅇ고등학교");
+  const [programName, setProgramName] = useState("과학과제연구 탐구계획서");
+  
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   const themes = [
     { id: "기후변화", label: "기후변화", icon: "🌍" },
@@ -70,6 +80,53 @@ export default function Home() {
     }
   };
 
+  const handleGenerateDetail = async (hypothesis: any) => {
+    if (!apiKey) {
+      alert("API 키가 필요합니다.");
+      return;
+    }
+    setStep(5); // Detail loading step
+    setDetailLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/detail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hypothesis, theme, problem, apiKey })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "상세 계획을 생성하는데 실패했습니다.");
+      
+      setDetailResult(data);
+      setStep(6); // Detail result step
+    } catch (err: any) {
+      setError(err.message);
+      setStep(4); // Go back to hypotheses on error
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (typeof window === "undefined" || !pdfRef.current) return;
+    
+    // Dynamically import html2pdf only on client side
+    const html2pdf = (await import("html2pdf.js")).default;
+    
+    const element = pdfRef.current;
+    const opt = {
+      margin: 15,
+      filename: `${schoolName}_${programName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+  };
+
   return (
     <>
       <button className="setting-btn" onClick={() => setShowSettings(true)} title="API 설정">
@@ -103,7 +160,28 @@ export default function Home() {
                 placeholder="AIzaSy..." 
               />
             </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div className="form-group" style={{ marginTop: "1rem" }}>
+              <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--primary)" }}>📄 PDF 양식 설정</h4>
+              <label className="form-label">학교명/소속</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                value={schoolName} 
+                onChange={e => setSchoolName(e.target.value)}
+                placeholder="예: 한국과학고등학교" 
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">프로그램명</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                value={programName} 
+                onChange={e => setProgramName(e.target.value)}
+                placeholder="예: 2024년 1학기 과학과제연구" 
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: "1.5rem" }}>
               <button className="btn btn-secondary" onClick={() => setShowSettings(false)}>취소</button>
               <button className="btn" onClick={saveApiKey}>저장</button>
             </div>
@@ -195,15 +273,140 @@ export default function Home() {
                   <h4><CheckCircle2 size={16} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "-2px" }}/>탐구 방법 (실험 계획)</h4>
                   <p>{item.method}</p>
 
-                  <div style={{ fontSize: "0.85rem", opacity: 0.7, borderTop: "1px solid var(--glass-border)", paddingTop: "1rem", marginTop: "1rem" }}>
+                  <div style={{ fontSize: "0.85rem", opacity: 0.7, borderTop: "1px solid var(--glass-border)", paddingTop: "1rem", marginTop: "1rem", marginBottom: "1rem" }}>
                     <strong>참고 자료/성취기준:</strong> {item.standard}
                   </div>
+                  
+                  <button className="btn" style={{ width: "100%" }} onClick={() => handleGenerateDetail(item)}>
+                    이 가설로 상세 계획서 생성하기 <ArrowRight size={18} />
+                  </button>
                 </div>
               ))}
 
               <button className="btn btn-secondary" style={{ marginTop: "1rem" }} onClick={() => { setStep(1); setTheme(""); setProblem(""); setResults(null); }}>
                 처음부터 다시하기
               </button>
+            </div>
+          )}
+
+          {step === 5 && (
+            <div style={{ textAlign: "center", padding: "2rem 0" }}>
+              <div className="loading-spinner"></div>
+              <h2>상세 실험 계획서를 작성하고 있습니다...</h2>
+              <p style={{ opacity: 0.8 }}>변인 설정, 재료 목록, 주차별 일정, 선행연구 등을<br/>종합적으로 구성 중입니다. (약 10~20초 소요)</p>
+            </div>
+          )}
+
+          {step === 6 && detailResult && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
+                <button className="btn btn-secondary" onClick={() => setStep(4)}>
+                  <ArrowLeft size={18} /> 가설 목록으로
+                </button>
+                <button className="btn" onClick={handleDownloadPDF} style={{ background: "var(--primary)", color: "white" }}>
+                  <Download size={18} /> PDF 다운로드
+                </button>
+              </div>
+
+              <div className="pdf-container" style={{ background: "white", padding: "2rem", borderRadius: "8px", color: "#333", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+                {/* PDF Content Area */}
+                <div ref={pdfRef} style={{ padding: "10px" }}>
+                  <div style={{ textAlign: "center", borderBottom: "2px solid #333", paddingBottom: "1rem", marginBottom: "2rem" }}>
+                    <h1 style={{ fontSize: "2rem", margin: "0 0 0.5rem 0", color: "#111" }}>{programName}</h1>
+                    <h2 style={{ fontSize: "1.2rem", margin: 0, color: "#555", fontWeight: "normal" }}>{schoolName}</h2>
+                  </div>
+
+                  <h3 style={{ fontSize: "1.5rem", color: "#111", marginBottom: "1rem" }}>{detailResult.title}</h3>
+                  
+                  <div style={{ marginBottom: "1.5rem", padding: "1rem", background: "#f8fafc", borderRadius: "4px", borderLeft: "4px solid #3b82f6" }}>
+                    <h4 style={{ margin: "0 0 0.5rem 0", color: "#1e40af", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <FlaskConical size={18} /> 탐구 가설
+                    </h4>
+                    <p style={{ margin: 0, fontWeight: "bold" }}>{detailResult.hypothesis}</p>
+                  </div>
+
+                  <div style={{ marginBottom: "2rem" }}>
+                    <h4 style={{ borderBottom: "1px solid #ddd", paddingBottom: "0.5rem", color: "#333" }}>1. 변인 설정</h4>
+                    <ul style={{ paddingLeft: "1.5rem", margin: "0.5rem 0", lineHeight: 1.6 }}>
+                      <li><strong>독립변인:</strong> {detailResult.variables.independent}</li>
+                      <li><strong>종속변인:</strong> {detailResult.variables.dependent}</li>
+                      <li><strong>통제변인:</strong> {detailResult.variables.controlled}</li>
+                    </ul>
+                  </div>
+
+                  <div style={{ marginBottom: "2rem" }}>
+                    <h4 style={{ borderBottom: "1px solid #ddd", paddingBottom: "0.5rem", color: "#333" }}>2. 탐구/실험 설계 (대조군/실험군)</h4>
+                    <p style={{ lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{detailResult.experimentDesign}</p>
+                  </div>
+
+                  <div style={{ marginBottom: "2rem" }}>
+                    <h4 style={{ borderBottom: "1px solid #ddd", paddingBottom: "0.5rem", color: "#333" }}>3. 실험 재료 및 예산 (예상)</h4>
+                    <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
+                      <thead>
+                        <tr style={{ background: "#f1f5f9" }}>
+                          <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left" }}>재료명</th>
+                          <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left" }}>수량</th>
+                          <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left" }}>예상 가격</th>
+                          <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left" }}>추천 구매처</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detailResult.materials.map((m: any, i: number) => (
+                          <tr key={i}>
+                            <td style={{ border: "1px solid #cbd5e1", padding: "8px" }}>{m.name}</td>
+                            <td style={{ border: "1px solid #cbd5e1", padding: "8px" }}>{m.quantity}</td>
+                            <td style={{ border: "1px solid #cbd5e1", padding: "8px" }}>{m.price}</td>
+                            <td style={{ border: "1px solid #cbd5e1", padding: "8px" }}>{m.source}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div style={{ marginBottom: "2rem" }}>
+                    <h4 style={{ borderBottom: "1px solid #ddd", paddingBottom: "0.5rem", color: "#333" }}>4. 주차별 탐구 일정</h4>
+                    <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
+                      <thead>
+                        <tr style={{ background: "#f1f5f9" }}>
+                          <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left", width: "20%" }}>주차</th>
+                          <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left" }}>수행 내용</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detailResult.schedule.map((s: any, i: number) => (
+                          <tr key={i}>
+                            <td style={{ border: "1px solid #cbd5e1", padding: "8px", fontWeight: "bold" }}>{s.week}</td>
+                            <td style={{ border: "1px solid #cbd5e1", padding: "8px" }}>{s.task}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div style={{ marginBottom: "2rem", padding: "1rem", background: "#fff5f5", borderRadius: "4px", borderLeft: "4px solid #ef4444" }}>
+                    <h4 style={{ margin: "0 0 0.5rem 0", color: "#b91c1c" }}>⚠️ 안전 유의사항</h4>
+                    <p style={{ margin: 0, lineHeight: 1.6 }}>{detailResult.safety}</p>
+                  </div>
+
+                  <div style={{ marginBottom: "2rem" }}>
+                    <h4 style={{ borderBottom: "1px solid #ddd", paddingBottom: "0.5rem", color: "#333", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <BookOpen size={18} /> 참고문헌 및 선행연구
+                    </h4>
+                    <ul style={{ paddingLeft: "1.5rem", margin: "0.5rem 0", lineHeight: 1.6 }}>
+                      {detailResult.references.map((r: any, i: number) => (
+                        <li key={i} style={{ marginBottom: "0.5rem" }}>
+                          <strong>{r.title}</strong> ({r.author}, {r.year})
+                          <br />
+                          <a href={r.url.startsWith('http') ? r.url : `https://scholar.google.co.kr/scholar?q=${encodeURIComponent(r.url)}`} target="_blank" rel="noreferrer" style={{ color: "#2563eb", textDecoration: "underline", fontSize: "0.9em" }}>
+                            {r.url.startsWith('http') ? '링크 보기' : `검색: ${r.url}`}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                </div>
+              </div>
             </div>
           )}
         </div>
