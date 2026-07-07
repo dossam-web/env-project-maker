@@ -5,7 +5,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 
 export async function POST(req: Request) {
   try {
-    const { theme, problem, region } = await req.json();
+    const { theme, problem, region, subRegion } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
 You are an expert environmental science educator for Korean high school students.
 The student is doing a "과학과제연구" (Science Inquiry/Research) project.
 They chose the theme "${theme}" and described their problem/observation as: "${problem}".
-${region ? `해당 학생의 거주 지역은 "${region}"입니다. 이 지역의 환경적 특성을 반영하거나 지역 환경교육 자료를 우선적으로 참고하여 주제를 추천해주세요.` : ''}
+${region ? `해당 학생의 거주 지역은 "${region}"${subRegion ? ` "${subRegion}"` : ''}입니다. 이 지역의 환경적 특성, 지리적 조건, 또는 특산품 등을 창의적으로 반영하여 학생 수준에 맞는 독창적인 주제를 추천해주세요.` : ''}
 
 Using the following MCP database context, generate 3-4 appropriate inquiry topics and hypotheses.
 
