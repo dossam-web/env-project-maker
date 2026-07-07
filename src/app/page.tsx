@@ -101,7 +101,13 @@ export default function Home() {
         body: JSON.stringify({ theme, problem, region, subRegion })
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error("서버와의 통신이 원활하지 않습니다. 잠시 후 다시 시도해 주세요. (게이트웨이 타임아웃 또는 서버 오류)");
+      }
+      
       if (!response.ok) throw new Error(data.error || "결과를 가져오는데 실패했습니다.");
       
       if (!data.hypotheses || !Array.isArray(data.hypotheses)) {
@@ -131,7 +137,13 @@ export default function Home() {
         body: JSON.stringify({ hypothesis, theme, problem })
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error("상세 계획을 생성하는 데 시간이 너무 오래 걸립니다. AI 모델의 응답이 늦어지고 있으니 잠시 후 다시 시도해 주세요.");
+      }
+      
       if (!response.ok) throw new Error(data.error || "상세 계획을 생성하는데 실패했습니다.");
       
       setDetailResult(data);
@@ -197,7 +209,13 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ originalHypothesis: item, chatHistory: currentHistory, userMessage: userMsg.content })
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        throw new Error("챗봇 서버와의 통신이 원활하지 않습니다. 잠시 후 다시 시도해 주세요.");
+      }
+      
       if (!res.ok) throw new Error(data.error);
 
       const aiMsg = { role: "ai", content: data.reply };

@@ -20,25 +20,22 @@ export async function POST(req: Request) {
     let attempts = 0;
     let lastError: any = null;
 
-    while (!connected && attempts < 3) {
+    while (!connected && attempts < 1) {
       try {
         attempts++;
         mcpClient = new Client({ name: "eco-inquiry", version: "1.0.0" }, { capabilities: {} });
         const transport = new StreamableHTTPClientTransport(
           new URL("https://gepai-mcp.vercel.app/mcp")
         );
-        // 5초 타임아웃 적용
+        // 2초 타임아웃 적용
         const connectPromise = mcpClient.connect(transport);
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("MCP Connection Timeout")), 5000));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("MCP Connection Timeout")), 2000));
         await Promise.race([connectPromise, timeoutPromise]);
         
         connected = true;
       } catch (err: any) {
         lastError = err;
         console.warn(`MCP Connection attempt ${attempts} failed:`, err.message);
-        if (attempts < 3) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
       }
     }
 
