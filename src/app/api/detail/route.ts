@@ -50,7 +50,7 @@ Please provide the results in JSON format matching the schema exactly.
     let response;
     try {
       response = await ai.models.generateContent({
-        model: "gemini-3.1-pro",
+        model: "gemini-3.5-flash",
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],

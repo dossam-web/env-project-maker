@@ -116,7 +116,7 @@ Please provide the results in JSON format matching the schema exactly.
 `;
 
 
-    // Try gemini-3.1-pro first, if not available fallback to gemini-3.5-flash
+    // Try gemini-3.1-pro first (higher quality), fallback to gemini-3.5-flash if needed
     let response;
     try {
       response = await ai.models.generateContent({
