@@ -120,7 +120,17 @@ Please provide the results in JSON format matching the schema exactly.
     console.error("Refine generate error:", error);
     let errorMessage = error.message || "알 수 없는 오류가 발생했습니다.";
     if (errorMessage.includes("429") || errorMessage.includes("exceeded your current quota") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
-      errorMessage = "AI 서버 사용량이 초과되었습니다 (무료 요금제 한도 도달). 약 1~2분 뒤에 다시 시도해주시거나, 구글 AI Studio에서 결제 계정을 연동해 주세요.";
+      if (errorMessage.toLowerCase().includes("perday") || errorMessage.toLowerCase().includes("daily")) {
+        errorMessage = "AI 서버의 일일(하루) 사용량 한도를 초과했습니다 (무료 요금제 한도 도달). 내일 다시 이용하시거나, 구글 AI Studio에서 결제 계정을 연동해 주세요.";
+      } else {
+        const match = errorMessage.match(/retry in ([\d\.]+)s/i);
+        if (match && match[1]) {
+          const seconds = Math.ceil(parseFloat(match[1]));
+          errorMessage = `AI 서버의 분당 사용량 한도를 초과했습니다. 약 ${seconds}초 후에 다시 시도해 주세요.`;
+        } else {
+          errorMessage = "AI 서버의 분당 사용량 한도를 초과했습니다. 약 1분 후에 다시 시도해 주세요.";
+        }
+      }
     } else if (errorMessage.includes("API key not valid") || errorMessage.includes("API_KEY_INVALID")) {
       errorMessage = "입력된 Gemini API 키가 올바르지 않습니다. 키 값을 다시 확인해 주세요.";
     } else if (errorMessage.includes("fetch failed") || errorMessage.includes("failed to fetch")) {
