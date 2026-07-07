@@ -255,6 +255,17 @@ export default function Home() {
                   <h4><CheckCircle2 size={16} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "-2px" }}/>탐구 방법 (실험 계획)</h4>
                   <p>{item.method}</p>
 
+                  {item.variables && (
+                    <div style={{ background: "rgba(59, 130, 246, 0.05)", padding: "1rem", borderRadius: "0.5rem", marginTop: "1rem" }}>
+                      <h5 style={{ margin: "0 0 0.5rem 0", color: "var(--primary)", fontSize: "0.95rem" }}>📊 실험 변인</h5>
+                      <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "0.9rem", lineHeight: 1.5, color: "var(--foreground)" }}>
+                        <li><strong>독립변인:</strong> {item.variables.independent}</li>
+                        <li><strong>종속변인:</strong> {item.variables.dependent}</li>
+                        <li><strong>통제변인:</strong> {item.variables.controlled}</li>
+                      </ul>
+                    </div>
+                  )}
+
                   <div style={{ fontSize: "0.85rem", opacity: 0.7, borderTop: "1px solid var(--glass-border)", paddingTop: "1rem", marginTop: "1rem", marginBottom: "1rem" }}>
                     <strong>참고 자료/성취기준:</strong> {item.standard}
                   </div>

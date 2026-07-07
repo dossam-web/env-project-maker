@@ -126,9 +126,19 @@ Please provide the results in JSON format matching the schema exactly.
                     topic: { type: Type.STRING, description: "탐구 프로젝트 제목" },
                     hypothesis: { type: Type.STRING, description: "검증할 구체적인 가설" },
                     method: { type: Type.STRING, description: "가설을 검증하기 위한 탐구/실험 설계 요약" },
+                    variables: {
+                      type: Type.OBJECT,
+                      description: "실험 변인 설정",
+                      properties: {
+                        independent: { type: Type.STRING, description: "독립변인" },
+                        dependent: { type: Type.STRING, description: "종속변인" },
+                        controlled: { type: Type.STRING, description: "통제변인" }
+                      },
+                      required: ["independent", "dependent", "controlled"]
+                    },
                     standard: { type: Type.STRING, description: "관련된 성취기준 혹은 참고 자료" }
                   },
-                  required: ["topic", "hypothesis", "method", "standard"]
+                  required: ["topic", "hypothesis", "method", "variables", "standard"]
                 }
               }
             },
@@ -155,9 +165,19 @@ Please provide the results in JSON format matching the schema exactly.
                     topic: { type: Type.STRING, description: "탐구 프로젝트 제목" },
                     hypothesis: { type: Type.STRING, description: "검증할 구체적인 가설" },
                     method: { type: Type.STRING, description: "가설을 검증하기 위한 탐구/실험 설계 요약" },
+                    variables: {
+                      type: Type.OBJECT,
+                      description: "실험 변인 설정",
+                      properties: {
+                        independent: { type: Type.STRING, description: "독립변인" },
+                        dependent: { type: Type.STRING, description: "종속변인" },
+                        controlled: { type: Type.STRING, description: "통제변인" }
+                      },
+                      required: ["independent", "dependent", "controlled"]
+                    },
                     standard: { type: Type.STRING, description: "관련된 성취기준 혹은 참고 자료" }
                   },
-                  required: ["topic", "hypothesis", "method", "standard"]
+                  required: ["topic", "hypothesis", "method", "variables", "standard"]
                 }
               }
             },
