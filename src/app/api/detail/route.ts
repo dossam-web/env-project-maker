@@ -31,7 +31,7 @@ A student has selected the following inquiry topic and hypothesis for their "과
 3. **실험 재료 목록**: 각 재료의 예상 가격(원)과 구매처(사이언스스타, 한솔교구, 쿠팡, 다이소 등 실제 구매 가능한 곳) 포함
 4. **주차별 실험 일정**: 16주(1학기) 기준, 각 주차별 수행 내용
 5. **안전 유의사항**: 해당 실험에서 주의해야 할 안전 수칙
-6. **참고문헌/선행연구**: 해당 탐구 주제와 관련하여 DBpia, RISS, KCI 등에서 검색하면 관련 연구를 찾을 수 있는 대표적인 논문/보고서 제목 2~3개를 제안해 주세요. 가짜 URL을 생성하지 마시고, URL 필드에는 단순히 'https://www.dbpia.co.kr' 또는 'https://scholar.google.co.kr'을 입력해 주세요. (프론트엔드에서 이 제목을 기반으로 실제 검색결과 페이지로 연결합니다.)
+6. **참고문헌/선행연구**: (가짜 논문 지어내기 절대 금지) 학생들이 직접 RISS, DBpia, Google Scholar 등에서 검색하여 실제 선행 연구를 스스로 찾을 수 있도록 도울 수 있는 **추천 검색 키워드(검색어)와 해당 키워드를 추천하는 이유(검색 팁)**를 2~3개 제안하세요. 절대 허구의 논문 제목이나 가짜 링크를 생성하지 마세요.
 
 ## 안전 규정 (반드시 준수)
 - 메탄올, 벤젠, 클로로포름, 포름알데히드 등 발암·맹독성 약품 사용 금지
@@ -98,16 +98,14 @@ Please provide the results in JSON format matching the schema exactly.
               safety: { type: Type.STRING, description: "안전 유의사항" },
               references: {
                 type: Type.ARRAY,
-                description: "참고문헌/선행연구 목록",
+                description: "추천 검색 키워드 및 검색 팁 목록",
                 items: {
                   type: Type.OBJECT,
                   properties: {
-                    title: { type: Type.STRING, description: "논문/자료 제목" },
-                    author: { type: Type.STRING, description: "저자 또는 기관" },
-                    year: { type: Type.STRING, description: "발행 연도" },
-                    url: { type: Type.STRING, description: "URL 또는 검색 키워드" }
+                    keyword: { type: Type.STRING, description: "추천 검색 키워드" },
+                    reason: { type: Type.STRING, description: "키워드 추천 이유 및 검색 팁" }
                   },
-                  required: ["title", "author", "year", "url"]
+                  required: ["keyword", "reason"]
                 }
               }
             },
@@ -167,12 +165,10 @@ Please provide the results in JSON format matching the schema exactly.
                 items: {
                   type: Type.OBJECT,
                   properties: {
-                    title: { type: Type.STRING },
-                    author: { type: Type.STRING },
-                    year: { type: Type.STRING },
-                    url: { type: Type.STRING }
+                    keyword: { type: Type.STRING },
+                    reason: { type: Type.STRING }
                   },
-                  required: ["title", "author", "year", "url"]
+                  required: ["keyword", "reason"]
                 }
               }
             },

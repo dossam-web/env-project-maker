@@ -531,21 +531,31 @@ export default function Home() {
                       <BookOpen size={18} /> 참고문헌 및 선행연구
                     </h4>
                     <ul style={{ paddingLeft: "1.5rem", margin: "0.5rem 0", lineHeight: 1.6 }}>
-                      {!detailResult.references || detailResult.references.length === 0 || detailResult.references[0].title.includes("관련자료 없음") ? (
-                        <li style={{ listStyle: "none", color: "#666" }}>해당 주제와 직접적으로 연관된 신뢰할 수 있는 학술 논문/자료를 찾지 못했습니다.</li>
+                      {!detailResult.references || detailResult.references.length === 0 ? (
+                        <li style={{ listStyle: "none", color: "#666" }}>추천 검색 키워드가 없습니다.</li>
                       ) : (
                         detailResult.references.map((r: any, i: number) => {
-                          const isDbpiaMain = r.url.includes('dbpia.co.kr') && r.url.length < 35;
-                          const linkHref = isDbpiaMain 
-                            ? `https://www.dbpia.co.kr/search/topSearch?searchOption=all&query=${encodeURIComponent(r.title)}`
-                            : (r.url.startsWith('http') ? r.url : `https://scholar.google.co.kr/scholar?q=${encodeURIComponent(r.title)}`);
+                          const query = encodeURIComponent(r.keyword);
+                          const dbpiaHref = `https://dbpia.co.kr/search/topSearch?searchOption=all&query=${query}`;
+                          const rissHref = `https://www.riss.kr/search/Search.do?query=${query}`;
+                          const scholarHref = `https://scholar.google.co.kr/scholar?q=${query}`;
                           return (
-                            <li key={i} style={{ marginBottom: "0.5rem" }}>
-                              <strong>{r.title}</strong> ({r.author}, {r.year})
-                              <br />
-                              <a href={linkHref} target="_blank" rel="noreferrer" style={{ color: "#2563eb", textDecoration: "underline", fontSize: "0.9em" }}>
-                                {isDbpiaMain ? 'DBpia에서 검색하기' : (r.url.startsWith('http') ? '링크 보기' : `검색: ${r.url}`)}
-                              </a>
+                            <li key={i} style={{ marginBottom: "1.2rem", listStyle: "none" }}>
+                              <strong style={{ fontSize: "1.05rem", color: "var(--primary)", display: "block" }}>🔎 "{r.keyword}"</strong>
+                              <p style={{ margin: "0.3rem 0 0.6rem 0", fontSize: "0.9rem", color: "#555", lineHeight: 1.5 }}>
+                                {r.reason}
+                              </p>
+                              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                                <a href={dbpiaHref} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem", width: "auto", display: "inline-flex", background: "white", color: "#333", border: "1px solid #ccc", borderRadius: "4px" }}>
+                                  DBpia 검색
+                                </a>
+                                <a href={rissHref} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem", width: "auto", display: "inline-flex", background: "white", color: "#333", border: "1px solid #ccc", borderRadius: "4px" }}>
+                                  RISS 검색
+                                </a>
+                                <a href={scholarHref} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem", width: "auto", display: "inline-flex", background: "white", color: "#333", border: "1px solid #ccc", borderRadius: "4px" }}>
+                                  Google Scholar 검색
+                                </a>
+                              </div>
                             </li>
                           );
                         })
