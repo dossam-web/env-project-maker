@@ -79,11 +79,11 @@ ${resourcesText || "No additional context found. Use your general knowledge."}
 Please provide the results in JSON format matching the schema exactly.
 `;
 
-    // Try gemini-3.1-pro first, if not available fallback to gemini-2.5-pro
+    // Try gemini-3.1-pro first, if not available fallback to gemini-3.1-flash
     let response;
     try {
       response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: "gemini-3.1-pro",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -110,9 +110,9 @@ Please provide the results in JSON format matching the schema exactly.
         }
       });
     } catch (modelErr) {
-      console.error("gemini-2.5-pro failed, falling back to gemini-1.5-pro:", modelErr);
+      console.error("gemini-3.1-pro failed, falling back to gemini-3.1-flash:", modelErr);
       response = await ai.models.generateContent({
-        model: "gemini-1.5-pro",
+        model: "gemini-3.1-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
