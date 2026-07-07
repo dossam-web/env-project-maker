@@ -73,7 +73,7 @@ export async function POST(req: Request) {
 You are an expert environmental science educator for Korean high school students.
 The student is doing a "과학과제연구" (Science Inquiry/Research) project.
 They chose the theme "${theme}" and described their problem/observation as: "${problem}".
-${region ? `해당 학생의 거주 지역은 "${region}"${subRegion ? ` "${subRegion}"` : ''}입니다. 이 지역의 환경적 특성, 지리적 조건, 또는 특산품 등을 창의적으로 반영하여 학생 수준에 맞는 독창적인 주제를 추천해주세요.` : ''}
+${region ? `해당 학생의 거주 지역은 "${region}"${subRegion ? ` "${subRegion}"` : ''}입니다. 이 지역의 지리적 환경 특성, 특산품 뿐만 아니라 인근의 주요 환경시설(예: 소각장, 매립지, 정수장, 생태공원, 산업단지 등)이나 지역사회가 안고 있는 환경적 과제 등 다양한 지역 요소를 종합적으로 반영하여 학생 수준에 맞는 독창적인 주제를 추천해주세요.` : ''}
 
 Using the following MCP database context, generate 3-4 appropriate inquiry topics and hypotheses.
 
